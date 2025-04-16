@@ -2,9 +2,13 @@
   "name": "authentication-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx --watch backend/server.ts",
+    "build": "tsup backend/server.ts --format esm --dts --minify",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
