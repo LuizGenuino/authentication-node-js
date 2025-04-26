@@ -1,5 +1,6 @@
 import express, {Request, Response} from "express"
 import { ENV } from "./utils/env.ts"
+import { connectToDatabase } from "./utils/db.ts"
 
 
 const app = express()
@@ -15,4 +16,5 @@ app.get("/health", (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`)
+    connectToDatabase()
 })
