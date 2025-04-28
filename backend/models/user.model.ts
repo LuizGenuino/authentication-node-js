@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import type { User } from "../../shared/user.type.ts";
+import bcrypt from "bcryptjs";
+import { calculateTokenExpiry } from "../utils/auth.utils.ts";
 
 const userSchema = new mongoose.Schema<User>({
     name: { type: String, required: true },
@@ -12,6 +14,24 @@ const userSchema = new mongoose.Schema<User>({
     verificationToken: { type: String },
     verificationTokenExpiresAt: { type: Date }
 }, { timestamps: true});
+
+// Middleware to hash password before saving the user
+userSchema.pre("save", async function (next) {
+    if (this.isModified("password") || this.isNew) {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+    }
+
+    if (this.verificationToken && !this.verificationTokenExpiresAt) {
+        this.verificationTokenExpiresAt = calculateTokenExpiry(24); // 24 hours
+    }
+
+    if (this.resetPasswordToken && !this.resetPasswordExpiresAt) {
+        this.resetPasswordExpiresAt = calculateTokenExpiry(24); // 24 hours
+    }
+
+    next();
+})
 
 const UserModel = mongoose.model<User>("User", userSchema);
 export default UserModel;
