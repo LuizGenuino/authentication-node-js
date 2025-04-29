@@ -2,7 +2,7 @@ import { Request, Response } from "express"
 import UserModel from "../models/user.model.ts"
 import { generateVerificationToken } from "../utils/auth.utils.ts"
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (req: Request, res: Response): Promise<any> => {
     try {
         const { name, email, password } = req.body
 
@@ -18,8 +18,6 @@ export const signup = async (req: Request, res: Response) => {
 
     const verificationToken = generateVerificationToken();
 
-    console.log(`Verification token for ${email}: ${verificationToken}`);
-
     const newUser = new UserModel({
         name,
         email,
@@ -27,7 +25,6 @@ export const signup = async (req: Request, res: Response) => {
         verificationToken
     });
 
-    console.log(`New user created: ${newUser}`);
     await newUser.save();
     
     res.status(201).json({success: true, message: "User created successfully", data: newUser})
