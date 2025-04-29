@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import UserModel from "../models/user.model.ts"
 import { generateVerificationToken } from "../utils/auth.utils.ts"
+import { sendVerificationEmail } from "../services/mailtrap/mailtrap.service.ts"
 
 export const signup = async (req: Request, res: Response): Promise<any> => {
     try {
@@ -26,6 +27,8 @@ export const signup = async (req: Request, res: Response): Promise<any> => {
     });
 
     await newUser.save();
+
+    await sendVerificationEmail(email, verificationToken);
     
     res.status(201).json({success: true, message: "User created successfully", data: newUser})
 
