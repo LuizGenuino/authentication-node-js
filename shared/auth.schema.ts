@@ -17,3 +17,8 @@ export const signUpSchema = baseSignUpSchema.refine(data => data.password === da
 export const verifyEmailSchema = z.object({
     verificationToken: z.string().min(6).max(6),
 })
+
+export const signInSchema = baseSignUpSchema.pick({
+    email: true,
+    password: true,
+})

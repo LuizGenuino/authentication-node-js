@@ -7,6 +7,8 @@ import { logger } from "../utils/logger.ts"
 import asyncHandler from "express-async-handler"
 import { BadRequestError } from "../errors/badRequest.error.ts"
 import { NotFoundError } from "../errors/notFound.error.ts"
+import { ENV } from "../utils/env.ts"
+import bcrypt from "bcryptjs"
 
 export const signup = asyncHandler(async (req: Request, res: Response): Promise<any> => {
         const { name, email, password } = req.body
@@ -103,10 +105,50 @@ export const resendVerificationEmail = asyncHandler(async (req: Request, res: Re
 
     const verificationToken = generateVerificationToken();
     user.verificationToken = verificationToken;
+
     await user.save();
 
     logger.info("Sending verification email");
     await sendVerificationEmail(user.email, verificationToken);
     res.status(200).json({success: true, message: "Verification email sent successfully"})
+})
 
+export const signOut = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+    res.clearCookie(ENV.JWT_COOKIE_NAME);
+    res.status(200).json({success: true, message: "User signed out successfully"})
+})
+
+export const signIn = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        throw new BadRequestError("Please provide all required fields")
+    }
+
+    const user = await UserModel.findOne({ email })
+    if (!user) {
+        logger.debug("User not found", { email })
+        throw new BadRequestError("Invalid credentials")
+    }
+
+    const isPasswordMatched = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatched) {
+        logger.debug("Invalid credentials", { email })
+        throw new BadRequestError("Invalid credentials")
+    }
+
+    if (!user.isVerified) {
+        logger.debug("User not verified", { email })
+        throw new BadRequestError("User not verified")
+    }
+
+    logger.info("Generating JWT Token and setting cookie");
+    const token = generateJWT(user._id.toString());
+    setTokenCookie(res, token);
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    res.status(200).json({success: true, message: "User signed in successfully", data: UserDTO.toJson(user)})
 })
