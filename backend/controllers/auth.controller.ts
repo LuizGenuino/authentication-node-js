@@ -86,3 +86,27 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response): Pro
 
     res.status(200).json({success: true, message: "Email verified successfully",  data: UserDTO.toJson(user)})
 })
+
+export const resendVerificationEmail = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+
+    const user = await UserModel.findById(req.userId).select("-password");
+    logger.info("Resending verification email", { userId: user?._id })
+    if (!user) {
+        logger.debug("User not found")
+        throw new NotFoundError("User not found")
+    }
+
+    if (user.isVerified) {
+        logger.debug("User already verified", { userId: user?._id  })
+        throw new BadRequestError("User already verified")
+    }
+
+    const verificationToken = generateVerificationToken();
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    logger.info("Sending verification email");
+    await sendVerificationEmail(user.email, verificationToken);
+    res.status(200).json({success: true, message: "Verification email sent successfully"})
+
+})
