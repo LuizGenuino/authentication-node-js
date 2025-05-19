@@ -24,21 +24,21 @@ class ErrorHandler {
             logger.info('Not found request error', error);
             return responseStream.status(error.statusCode).json({
                 success: false,
-                message: fromError(error.toString()),
+                message: error.message,
             });
 
         } else if (error instanceof UnauthorizedError) {
             logger.info('Unauthorized request error', error);
             return responseStream.status(error.statusCode).json({
                 success: false,
-                message: fromError(error.toString()),
+                message:  error.message,
             });
 
         } else if (error instanceof ZodError) {
             logger.info('Zod validation error', error);
             return responseStream.status(400).json({
                 success: false,
-                message: fromError(error.toString()),
+                message: fromError(error).toString(),
             });
 
         } else {

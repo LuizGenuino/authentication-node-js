@@ -3,7 +3,7 @@
 
 import { MailtrapClient } from "mailtrap";
 import { ENV } from "../../utils/env.ts";
-import { VERIFICATION_EMAIL_TEMPLATE } from "./mailtrap.templates.ts";
+import { VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "./mailtrap.templates.ts";
 import { logger } from "../../utils/logger.ts";
 
 
@@ -54,6 +54,19 @@ export const sendVerificationEmail = async (email: string, verificationToken: st
     await sendEmail({
         subject: "Verify Your Email",
         category: "verification Email",
+        html: emailContent
+    })
+}
+
+export const sendWelcomeEmail = async (email: string, name: string) => {
+    const emailContent = replacePlaceholders(WELCOME_EMAIL_TEMPLATE, {
+        name: name,
+        company: ENV.MAILTRAP_COMPANY_NAME,
+    });
+
+    await sendEmail({
+        subject: "Welcome to Our Service",
+        category: "Welcome Email",
         html: emailContent
     })
 }

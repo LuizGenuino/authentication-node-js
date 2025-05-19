@@ -13,3 +13,7 @@ export const baseSignUpSchema = z.object({
 export const signUpSchema = baseSignUpSchema.refine(data => data.password === data.confirmPassword, {
     message: 'Passwords do not match', path: ['confirmPassword'],
 });
+
+export const verifyEmailSchema = z.object({
+    verificationToken: z.string().min(6).max(6),
+})

@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import UserModel from "../models/user.model.ts"
 import { generateJWT, generateVerificationToken, setTokenCookie } from "../utils/auth.utils.ts"
-import { sendVerificationEmail } from "../services/mailtrap/mailtrap.service.ts"
+import { sendVerificationEmail, sendWelcomeEmail } from "../services/mailtrap/mailtrap.service.ts"
 import { UserDTO } from "../models/DTO/user.dto.ts"
 import { logger } from "../utils/logger.ts"
 import asyncHandler from "express-async-handler"
@@ -57,4 +57,32 @@ export const fetchCurrentUser = asyncHandler(async (req: Request, res: Response)
     }
 
     res.status(200).json({success: true, message: "User fetched successfully", data: UserDTO.toJson(user)})
+})
+
+export const verifyEmail = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+    const { verificationToken } = req.body;
+
+    if (!verificationToken) {        
+        throw new BadRequestError("Please provide a verification token")
+    }
+
+    const user = await UserModel.findOne({ verificationToken, verificationTokenExpiresAt: {
+        $gt: new Date() } }).select("-password");
+
+
+    if (!user) {
+        logger.debug("Invalid or expired verification token", { verificationToken })
+        throw new NotFoundError("Invalid or expired verification token")
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiresAt = undefined;
+
+    logger.info("Going to save the user after email verification")
+    await user.save();
+  
+    await sendWelcomeEmail(user.email, user.name);
+
+    res.status(200).json({success: true, message: "Email verified successfully",  data: UserDTO.toJson(user)})
 })
