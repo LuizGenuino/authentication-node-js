@@ -4,6 +4,7 @@
 import { MailtrapClient } from "mailtrap";
 import { ENV } from "../../utils/env.ts";
 import { VERIFICATION_EMAIL_TEMPLATE } from "./mailtrap.templates.ts";
+import { logger } from "../../utils/logger.ts";
 
 
 const client = new MailtrapClient({
@@ -31,9 +32,9 @@ const sendEmail = async ({ subject, category, html }: { subject: string, categor
             category,
             html
         });
-        console.log("Email sent successfully:", response);
+        logger.info("Email sent successfully:", response);
     } catch (error) {
-        console.error("Error sending email:", error);
+        logger.error("Error sending email:", error);
         throw error
     }
 }
