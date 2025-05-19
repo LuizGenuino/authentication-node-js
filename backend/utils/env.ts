@@ -10,6 +10,12 @@ const envSchema = z.object({
     MAILTRAP_SENDER_EMAIL: z.string(),
     MAILTRAP_SENDER_NAME: z.string(),
     MAILTRAP_COMPANY_NAME: z.string(),
+    JWT_SECRET_KEY: z.string(),
+    JWT_EXPIRATION_TIME: z.string(),
+    JWT_COOKIE_NAME: z.string(),
+    JWT_COOKIE_MAX_AGE_IN_MS: z.string().refine((time) => parseInt(time) > 0, "Invalid JWT Cookie Expiration Time"),
+    BCRYPT_SALT_ROUNDS: z.string().refine((rounds) => parseInt(rounds) > 0 && parseInt(rounds) < 15, "Invalid Bcrypt Salt Rounds"),
+
 })
 
 type Env = z.infer<typeof envSchema>;
