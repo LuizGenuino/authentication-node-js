@@ -6,6 +6,7 @@ import { UserDTO } from "../models/DTO/user.dto.ts"
 import { logger } from "../utils/logger.ts"
 import asyncHandler from "express-async-handler"
 import { BadRequestError } from "../errors/badRequest.error.ts"
+import { NotFoundError } from "../errors/notFound.error.ts"
 
 export const signup = asyncHandler(async (req: Request, res: Response): Promise<any> => {
         const { name, email, password } = req.body
@@ -44,4 +45,16 @@ export const signup = asyncHandler(async (req: Request, res: Response): Promise<
     await sendVerificationEmail(email, verificationToken);
     
     res.status(201).json({success: true, message: "User created successfully", data: UserDTO.toJson(newUser)})
+})
+
+
+export const fetchCurrentUser = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+    const user = await UserModel.findById(req.userId).select("-password");
+
+    if (!user) {
+        logger.debug("User not found", { userId: req.userId })
+        throw new NotFoundError("User not found")
+    }
+
+    res.status(200).json({success: true, message: "User fetched successfully", data: UserDTO.toJson(user)})
 })
