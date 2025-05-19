@@ -1,21 +1,15 @@
 import type { NextFunction, Request, Response } from "express";
+import asyncHandler from "express-async-handler";
 import type { ZodSchema } from "zod";
-import { fromError } from "zod-validation-error";
+
 
 type RequestSection = "body" | "params" | "query";
 
 export const validateSchema = (schema: ZodSchema, requestSection: RequestSection) =>
-    (req: Request, res: Response, next: NextFunction): void => {
-        try {
+    asyncHandler( async (req: Request, res: Response, next: NextFunction) => {
             if (!["body", "params", "query"].includes(requestSection)) {
-                res.status(400).json({ success: false, message: "Invalid Request Section" });
-                return;
+                throw new Error("Invalid request section");
             }
-
             schema.parse(req[requestSection]);
             next();
-        } catch (error) {
-            const message = fromError(error).toString();
-            res.status(400).json({ success: false, message });
-        }
-    };
+    })

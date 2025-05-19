@@ -1,10 +1,13 @@
-import {z} from 'zod';
+import 'dotenv/config';
+import { z} from 'zod';
+
+const MIN_PASSWORD_LENGTH = Number(process.env.MIN_PASSWORD_LENGTH || "8");
 
 export const baseSignUpSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(8, {message: 'Password must be at least 8 characters long'}),
+    password: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Password must be at least 8 characters long'}),
     name: z.string().min(3, {message: 'Name is required'}),
-    confirmPassword: z.string().min(8, {message: 'Confirm password must be at least 8 characters long'}),
+    confirmPassword: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Confirm password must be at least 8 characters long'}),
 });
 
 export const signUpSchema = baseSignUpSchema.refine(data => data.password === data.confirmPassword, {

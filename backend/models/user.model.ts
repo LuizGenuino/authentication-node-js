@@ -2,11 +2,12 @@ import mongoose from "mongoose";
 import type { User } from "../../shared/user.type.ts";
 import bcrypt from "bcryptjs";
 import { calculateTokenExpiry } from "../utils/auth.utils.ts";
+import { ENV } from "../utils/env.ts";
 
 const userSchema = new mongoose.Schema<User>({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true, minlength: 8 },
+    password: { type: String, required: true, minlength: Number(ENV.MIN_PASSWORD_LENGTH) || 8 },
     lastLogin: { type: Date, default: Date.now },
     isVerified: { type: Boolean, required: true, default: false },
     resetPasswordToken: { type: String },
@@ -18,7 +19,7 @@ const userSchema = new mongoose.Schema<User>({
 // Middleware to hash password before saving the user
 userSchema.pre("save", async function (next) {
     if (this.isModified("password") || this.isNew) {
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(Number(ENV.BCRYPT_SALT_ROUNDS) || 10);
         this.password = await bcrypt.hash(this.password, salt);
     }
 

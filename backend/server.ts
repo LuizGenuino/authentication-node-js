@@ -1,11 +1,12 @@
-import express, {Request, Response} from "express"
+import express, {NextFunction, Request, Response} from "express"
 import { ENV } from "./utils/env.ts"
 import { connectToDatabase } from "./utils/db.ts"
 import router from "./routes/auth.route.ts"
 import cookieParser from "cookie-parser"
 import helmet from "helmet"
 import { logger } from "./utils/logger.ts"
-import { morganMiddleware } from "./controllers/morgan.middleware.ts"
+import { morganMiddleware } from "./middlewares/morgan.middleware.ts"
+import { errorHandler } from "./utils/errorHandler.ts"
 
 
 const app = express()
@@ -26,6 +27,10 @@ app.get("/health", (req: Request, res: Response) => {
 })
 
 app.use("/api/v1/auth", router)
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    errorHandler.handleError(err, res)
+})
 
 app.listen(PORT, () => {
     logger.info(`Server is running on http://localhost:${PORT}`)
