@@ -26,3 +26,13 @@ export const signInSchema = baseSignUpSchema.pick({
 export const forgotPasswordSchema = baseSignUpSchema.pick({
     email: true,
 })
+
+export const baseResetPasswordSchema = z.object({
+    token: z.string(),
+    password: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Password must be at least 8 characters long'}),
+    confirmPassword: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Confirm password must be at least 8 characters long'}),
+});
+
+export const resetPasswordSchema = baseResetPasswordSchema.refine(data => data.password === data.confirmPassword, {
+    message: 'Passwords do not match', path: ['confirmPassword'],
+});

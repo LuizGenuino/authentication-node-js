@@ -28,7 +28,7 @@ userSchema.pre("save", async function (next) {
     }
 
     if (this.resetPasswordToken && !this.resetPasswordExpiresAt) {
-        this.resetPasswordExpiresAt = calculateTokenExpiry(24); // 24 hours
+        this.resetPasswordExpiresAt = calculateTokenExpiry(1); // 24 hours
     }
 
     next();

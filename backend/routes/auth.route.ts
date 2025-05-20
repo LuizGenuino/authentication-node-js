@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { fetchCurrentUser, forgotPassword, resendVerificationEmail, signIn, signOut, signup, verifyEmail } from "../controllers/auth.controller.ts";
+import { fetchCurrentUser, forgotPassword, resendVerificationEmail, resetPassword, signIn, signOut, signup, verifyEmail } from "../controllers/auth.controller.ts";
 import { validateSchema } from "../middlewares/validation.middleware.ts";
-import { forgotPasswordSchema, signInSchema, signUpSchema, verifyEmailSchema } from "../../shared/auth.schema.ts";
+import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema, verifyEmailSchema } from "../../shared/auth.schema.ts";
 import { verifyToken } from "../middlewares/auth.middleware.ts";
 
 const router = Router();
@@ -20,5 +20,7 @@ router.post("/signout", verifyToken, signOut)
 router.post("/signin", validateSchema(signInSchema, "body"),signIn)
 
 router.post("/forgot-password", validateSchema(forgotPasswordSchema, "body"), forgotPassword)
+
+router.post("/reset-password/", validateSchema(resetPasswordSchema, "body"), resetPassword)
 
 export default router;

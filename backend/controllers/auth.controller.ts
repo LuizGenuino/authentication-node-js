@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import UserModel from "../models/user.model.ts"
 import { generateJWT, generateVerificationToken, setTokenCookie } from "../utils/auth.utils.ts"
-import { sendResetPasswordEmail, sendVerificationEmail, sendWelcomeEmail } from "../services/mailtrap/mailtrap.service.ts"
+import { sendResetPasswordEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from "../services/mailtrap/mailtrap.service.ts"
 import { UserDTO } from "../models/DTO/user.dto.ts"
 import { logger } from "../utils/logger.ts"
 import asyncHandler from "express-async-handler"
@@ -15,10 +15,6 @@ export const signup = asyncHandler(async (req: Request, res: Response): Promise<
         const { name, email, password } = req.body
 
     logger.info("Started to signup a new user", { name, email })
-
-    if (!name || !email || !password) {
-        throw new BadRequestError("Please provide all required fields")
-    }
 
     const userAlreadyExists = await UserModel.findOne({ email });
     
@@ -64,10 +60,6 @@ export const fetchCurrentUser = asyncHandler(async (req: Request, res: Response)
 
 export const verifyEmail = asyncHandler(async (req: Request, res: Response): Promise<any> => {
     const { verificationToken } = req.body;
-
-    if (!verificationToken) {        
-        throw new BadRequestError("Please provide a verification token")
-    }
 
     const user = await UserModel.findOne({ verificationToken, verificationTokenExpiresAt: {
         $gt: new Date() } }).select("-password");
@@ -122,10 +114,6 @@ export const signOut = asyncHandler(async (req: Request, res: Response): Promise
 export const signIn = asyncHandler(async (req: Request, res: Response): Promise<any> => {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-        throw new BadRequestError("Please provide all required fields")
-    }
-
     const user = await UserModel.findOne({ email })
     if (!user) {
         logger.debug("User not found", { email })
@@ -157,16 +145,17 @@ export const signIn = asyncHandler(async (req: Request, res: Response): Promise<
 export const forgotPassword = asyncHandler(async (req: Request, res: Response): Promise<any> => {
     const { email } = req.body;
 
-    if (!email) {
-        throw new BadRequestError("Please provide an email")
-    }
-
     logger.info("Started to reset password", { email })
 
     const user = await UserModel.findOne({ email })
     if (!user) {
         logger.debug("User not found", { email })
         throw new NotFoundError("User not found")
+    }
+
+    if (!user.isVerified) {
+        logger.debug("User not verified", { email })
+        throw new BadRequestError("User not verified")
     }
 
     const resetToken = randomBytes(16).toString("hex");
@@ -178,4 +167,30 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response): 
     await sendResetPasswordEmail(email, resetToken);
 
     res.status(200).json({success: true, message: "Password reset email sent successfully"})
+})
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+    const { password, token } = req.body;
+
+    logger.info("Started to reset password", { token })
+
+    const user = await UserModel.findOne({ resetPasswordToken: token, resetPasswordExpiresAt: {
+        $gt: new Date() } });
+    if (!user) {
+        logger.debug("Invalid or expired reset password token", { token })
+        throw new NotFoundError("Invalid or expired reset password token")
+    }
+
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    await user.save();
+    logger.info("Password reset successfully", { userId: user._id })
+
+    await sendResetSuccessEmail(user.email);
+    logger.info("Sending password reset success email", { userId: user._id })
+
+
+
+    res.status(200).json({success: true, message: "Password reset successfully"})
 })
