@@ -1,18 +1,25 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import { Button } from './components/ui/button'
+import { Route, Routes } from "react-router-dom"
+import HomePage from "./pages/HomePage"
+import SignUpPage from "./pages/SignUpPage"
+import SignInPage from "./pages/SignInPage"
+import EmailVerificationPage from "./pages/EmailVerificationPage"
+import ForgotPasswordPage from "./pages/ForgotPasswordPage"
+import ResetPasswordPage from "./pages/ResetPasswordPage"
 
 function App() {
-  const [count, setCount] = useState(0)
+
 
   return (
-    <>
-     <h1 className="text-3xl font-bold underline">
-    Hello world!
-    </h1>
-    <Button>Click me</Button>
-    </>
+    <div className="min-h-screen bg-background flex justify-center items-center" >
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        </Routes>
+    </div>
   )
 }
 
