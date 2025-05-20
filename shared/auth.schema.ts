@@ -3,36 +3,44 @@ import { z} from 'zod';
 
 const MIN_PASSWORD_LENGTH = Number(process.env.MIN_PASSWORD_LENGTH || "8");
 
-export const baseSignUpSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Password must be at least 8 characters long'}),
-    name: z.string().min(3, {message: 'Name is required'}),
-    confirmPassword: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Confirm password must be at least 8 characters long'}),
-});
+const passwordSchema = z.string().min(MIN_PASSWORD_LENGTH, {
+  message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`})
 
-export const signUpSchema = baseSignUpSchema.refine(data => data.password === data.confirmPassword, {
-    message: 'Passwords do not match', path: ['confirmPassword'],
-});
+const emailSchema = z.string().email({
+  message: "Invalid email address"});
+
+const addPasswordConfirmation = (schema: z.ZodSchema) => {
+    return schema.refine((data) => { data.password === data.confirmPassword }, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+    });
+}
+
+export const baseSignUpSchema = z.object({
+    name: z.string().min(3, { message: "Name is required" }),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+})
+
+export const baseResetPasswordSchema = z.object({
+    token: z.string(),
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+})
+
+export const signUpSchema = addPasswordConfirmation(baseSignUpSchema);
+export const resetPasswordSchema = addPasswordConfirmation(baseResetPasswordSchema);
 
 export const verifyEmailSchema = z.object({
     verificationToken: z.string().min(6).max(6),
 })
 
-export const signInSchema = baseSignUpSchema.pick({
-    email: true,
-    password: true,
-})
-
-export const forgotPasswordSchema = baseSignUpSchema.pick({
-    email: true,
-})
-
-export const baseResetPasswordSchema = z.object({
-    token: z.string(),
-    password: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Password must be at least 8 characters long'}),
-    confirmPassword: z.string().min(MIN_PASSWORD_LENGTH, {message: 'Confirm password must be at least 8 characters long'}),
+export const signInSchema = z.object({
+    email: emailSchema,
+    password: passwordSchema
 });
 
-export const resetPasswordSchema = baseResetPasswordSchema.refine(data => data.password === data.confirmPassword, {
-    message: 'Passwords do not match', path: ['confirmPassword'],
-});
+export const forgotPasswordSchema = z.object({
+    email: emailSchema,
+})
