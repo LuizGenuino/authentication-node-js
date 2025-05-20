@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import UserModel from "../models/user.model.ts"
 import { generateJWT, generateVerificationToken, setTokenCookie } from "../utils/auth.utils.ts"
-import { sendVerificationEmail, sendWelcomeEmail } from "../services/mailtrap/mailtrap.service.ts"
+import { sendResetPasswordEmail, sendVerificationEmail, sendWelcomeEmail } from "../services/mailtrap/mailtrap.service.ts"
 import { UserDTO } from "../models/DTO/user.dto.ts"
 import { logger } from "../utils/logger.ts"
 import asyncHandler from "express-async-handler"
@@ -9,6 +9,7 @@ import { BadRequestError } from "../errors/badRequest.error.ts"
 import { NotFoundError } from "../errors/notFound.error.ts"
 import { ENV } from "../utils/env.ts"
 import bcrypt from "bcryptjs"
+import { randomBytes } from "node:crypto"
 
 export const signup = asyncHandler(async (req: Request, res: Response): Promise<any> => {
         const { name, email, password } = req.body
@@ -151,4 +152,30 @@ export const signIn = asyncHandler(async (req: Request, res: Response): Promise<
     await user.save();
 
     res.status(200).json({success: true, message: "User signed in successfully", data: UserDTO.toJson(user)})
+})
+
+export const forgotPassword = asyncHandler(async (req: Request, res: Response): Promise<any> => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new BadRequestError("Please provide an email")
+    }
+
+    logger.info("Started to reset password", { email })
+
+    const user = await UserModel.findOne({ email })
+    if (!user) {
+        logger.debug("User not found", { email })
+        throw new NotFoundError("User not found")
+    }
+
+    const resetToken = randomBytes(16).toString("hex");
+    user.resetPasswordToken = resetToken;
+    logger.info("Reset token generated", { resetToken })
+    await user.save();
+
+    logger.info("Sending password reset email");
+    await sendResetPasswordEmail(email, resetToken);
+
+    res.status(200).json({success: true, message: "Password reset email sent successfully"})
 })

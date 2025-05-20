@@ -3,7 +3,7 @@
 
 import { MailtrapClient } from "mailtrap";
 import { ENV } from "../../utils/env.ts";
-import { VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "./mailtrap.templates.ts";
+import { PASSWORD_RESET_REQUEST_TEMPLATE, VERIFICATION_EMAIL_TEMPLATE, WELCOME_EMAIL_TEMPLATE } from "./mailtrap.templates.ts";
 import { logger } from "../../utils/logger.ts";
 
 
@@ -67,6 +67,19 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
     await sendEmail({
         subject: "Welcome to Our Service",
         category: "Welcome Email",
+        html: emailContent
+    })
+}
+
+export const sendResetPasswordEmail = async (email: string, resetToken: string) => {
+    const emailContent = replacePlaceholders(PASSWORD_RESET_REQUEST_TEMPLATE, {
+        resetURL: `${ENV.CLIENT_URL}/reset-password/${resetToken}`,
+        company: ENV.MAILTRAP_COMPANY_NAME,
+    });
+
+    await sendEmail({
+        subject: "Reset Your Password",
+        category: "Password Reset Email",
         html: emailContent
     })
 }

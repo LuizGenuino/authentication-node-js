@@ -22,3 +22,7 @@ export const signInSchema = baseSignUpSchema.pick({
     email: true,
     password: true,
 })
+
+export const forgotPasswordSchema = baseSignUpSchema.pick({
+    email: true,
+})
