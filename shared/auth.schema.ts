@@ -9,7 +9,7 @@ const emailSchema = z.string().email({
   message: "Invalid email address"});
 
 const addPasswordConfirmation = (schema: z.ZodSchema) => {
-    return schema.refine((data) => { data.password === data.confirmPassword }, {
+    return schema.refine((data) =>  data.password === data.confirmPassword, {
         message: "Passwords do not match",
         path: ["confirmPassword"],
     });
